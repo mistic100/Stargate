@@ -11,6 +11,10 @@ Stepper gate(MOTOR_SYMBOLS_STEPS, MOTOR_SYMBOLS_PIN1, MOTOR_SYMBOLS_PIN2);
 CmdParser cmdParser;
 Manager manager;
 
+bool buttonPressed;
+bool cancelButton;
+unsigned long buttonPressTime;
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Stargate");
@@ -52,12 +56,20 @@ void loop() {
     }
   }
 
-  int control = analogRead(CONTROLS_PIN);
-  if (control > CONTROLS_THRES_1) {
-    manager.randomAddress();
-  }
-  else if (control > CONTROLS_THRES_2) {
-    manager.nextAnimation();
+  if (digitalRead(CONTROLS_PIN) == HIGH) {
+    if (!buttonPressed) {
+      buttonPressed = true;
+      cancelButton = false;
+      buttonPressTime = millis();
+    } else if (millis() - buttonPressTime > CONTROLS_LONG_PRESS) {
+      manager.randomAddress();
+      cancelButton = true;
+    }
+  } else if (buttonPressed) {
+    if (!cancelButton) {
+      manager.nextAnimation();
+    }
+    buttonPressed = false;
   }
   
   manager.run();
