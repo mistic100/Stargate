@@ -10,7 +10,7 @@
 #define MOTOR_SYMBOLS_PIN2 A4
 #define MOTOR_SYMBOLS_ENA_PIN A5
 #define MOTOR_SYMBOLS_STEPS 200 * 4
-#define MOTOR_SYMBOLS_RPM 40
+#define MOTOR_SYMBOLS_RPM 60
 
 // 78 teeth on symbols gear
 // 12 teeth on motor gear

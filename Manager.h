@@ -4,11 +4,13 @@
 #include <Stepper.h>
 #include "random8.h"
 
+#define NB_ANIMS 6
+
 class Manager {
 
   private:
-  enum Modes mode = WAIT;
-  uint8_t animId = 0;
+  enum Modes mode = ANIM;
+  uint8_t animId = random8(0, NB_ANIMS);
   
   int ldrValue = 0;
   bool calibrated = false;
@@ -45,7 +47,7 @@ class Manager {
       animId = 0;
     } else {
       animId++;
-      if (animId >= 5) {
+      if (animId >= NB_ANIMS) {
         animId = 0;
       }
     }
@@ -94,6 +96,7 @@ class Manager {
           case 2: runAnim3(); break;
           case 3: runAnim4(); break;
           case 4: runAnim5(); break;
+          case 5: runAnim6(); break;
         }
         break;
 
@@ -221,14 +224,17 @@ class Manager {
       Serial.println("Chevron locked");
 
       enableServoChevron();
+      delay(SERVO_CHEVRON_DELAY);
       chevron->write(SERVO_CHEVRON_POS_DOWN);
       digitalWrite(Chevron_Lock, HIGH);
       digitalWrite(Chevrons[dialStep], HIGH);
       
-      delay(1500);
-      
+      delay(1000);
+
+      if (dialStep < 6) {
+        digitalWrite(Chevron_Lock, LOW);
+      }
       chevron->write(SERVO_CHEVRON_POS_UP);
-      digitalWrite(Chevron_Lock, LOW);
       delay(SERVO_CHEVRON_DELAY);
       disableServoChevron();
 
@@ -320,25 +326,64 @@ class Manager {
    */
   void runAnim3() {
     disengageAll();
-    if (animStep == 0) {
-      digitalWrite(Ring_Chevrons[0], HIGH);
-    } else if ((animStep == 1) || (animStep == 7)) {
-      digitalWrite(Ring_Chevrons[1], HIGH);
-      digitalWrite(Ring_Chevrons[8], HIGH);
-    } else if ((animStep == 2) || (animStep == 6)) {
-      digitalWrite(Ring_Chevrons[2], HIGH);
-      digitalWrite(Ring_Chevrons[7], HIGH);
-    } else if ((animStep == 3) || (animStep == 5)) {
-      digitalWrite(Ring_Chevrons[3], HIGH);
-      digitalWrite(Ring_Chevrons[6], HIGH);
-    } else if (animStep == 4) {
-      digitalWrite(Ring_Chevrons[4], HIGH);
-      digitalWrite(Ring_Chevrons[5], HIGH); 
+
+    switch (animStep) {
+      case 0: 
+        digitalWrite(Ring_Chevrons[0], HIGH);
+        break;
+      case 1:
+      case 2:
+      case 16:
+        digitalWrite(Ring_Chevrons[0], HIGH);
+        digitalWrite(Ring_Chevrons[1], HIGH);
+        digitalWrite(Ring_Chevrons[8], HIGH);
+        break;
+      case 3:
+      case 15:
+        digitalWrite(Ring_Chevrons[1], HIGH);
+        digitalWrite(Ring_Chevrons[8], HIGH);
+        break;
+      case 4:
+      case 14:
+        digitalWrite(Ring_Chevrons[1], HIGH);
+        digitalWrite(Ring_Chevrons[8], HIGH);
+        digitalWrite(Ring_Chevrons[2], HIGH);
+        digitalWrite(Ring_Chevrons[7], HIGH);
+        break;
+      case 5:
+      case 13:
+        digitalWrite(Ring_Chevrons[2], HIGH);
+        digitalWrite(Ring_Chevrons[7], HIGH);
+        break;
+      case 6:
+      case 12:
+        digitalWrite(Ring_Chevrons[2], HIGH);
+        digitalWrite(Ring_Chevrons[7], HIGH);
+        digitalWrite(Ring_Chevrons[3], HIGH);
+        digitalWrite(Ring_Chevrons[6], HIGH);
+        break;
+      case 7:
+      case 11:
+        digitalWrite(Ring_Chevrons[3], HIGH);
+        digitalWrite(Ring_Chevrons[6], HIGH);
+        break;
+      case 8:
+      case 10:
+        digitalWrite(Ring_Chevrons[3], HIGH);
+        digitalWrite(Ring_Chevrons[6], HIGH);
+        digitalWrite(Ring_Chevrons[4], HIGH);
+        digitalWrite(Ring_Chevrons[5], HIGH); 
+        break;
+      case 9:
+        digitalWrite(Ring_Chevrons[4], HIGH);
+        digitalWrite(Ring_Chevrons[5], HIGH); 
+        break;
     }
-    delay(120);
+
+    delay(100);
     
     animStep++;
-    if (animStep >= 8) {
+    if (animStep >= 16) {
       animStep = 0;
     }
   }
@@ -347,18 +392,19 @@ class Manager {
    * Execute light animation 4
    */
   void runAnim4() {
-    int8_t tmp_Ring = animStep - 4;
-    if (tmp_Ring < 0){
-      tmp_Ring+= 9;
+    for (uint8_t i = animStep; i < animStep + 3; i++) {
+      digitalWrite(Ring_Chevrons[i % 9], HIGH);
     }
-    digitalWrite(Ring_Chevrons[tmp_Ring], LOW);
-    if (animStep <= 8) {
-      digitalWrite(Ring_Chevrons[animStep], HIGH);
+    if (animStep == 0) {
+      digitalWrite(Ring_Chevrons[8], LOW);
+    } else {
+      digitalWrite(Ring_Chevrons[animStep - 1], LOW);
     }
+
     delay(120);
   
     animStep++;
-    if (animStep >= 13) {
+    if (animStep >= 9) {
       animStep = 0;
     }
   }
@@ -385,6 +431,15 @@ class Manager {
     if (animStep >= 9) {
       animStep = 0;
     }
+  }
+
+  /**
+   * Execute light animation 6
+   */
+  void runAnim6() {
+    digitalWrite(Ring_Chevrons[random8(0, 8)], HIGH);
+    digitalWrite(Ring_Chevrons[random8(0, 8)], LOW);
+    delay(40);
   }
 
   void enableServoChevron() {
